@@ -121,29 +121,6 @@ function RSAEncrypt(text)
     else return "0" + h;
 }
 
-function RSAToJSON()
-{
-    return {
-        coeff: this.coeff.toString(16),
-        d: this.d.toString(16),
-        dmp1: this.dmp1.toString(16),
-        dmq1: this.dmq1.toString(16),
-        e: this.e.toString(16),
-        n: this.n.toString(16),
-        p: this.p.toString(16),
-        q: this.q.toString(16),
-    }
-}
-
-function RSAParse(rsaString) {
-    var json = JSON.parse(rsaString);
-    var rsa = new RSAKey();
-
-    rsa.setPrivateEx(json.n, json.e, json.d, json.p, json.q, json.dmp1, json.dmq1, json.coeff);
-
-    return rsa;
-}
-
 // Return the PKCS#1 RSA encryption of "text" as a Base64-encoded string
 //function RSAEncryptB64(text) {
 //  var h = this.encrypt(text);
@@ -155,9 +132,7 @@ RSAKey.prototype.doPublic = RSADoPublic;
 // public
 RSAKey.prototype.setPublic = RSASetPublic;
 RSAKey.prototype.encrypt = RSAEncrypt;
-RSAKey.prototype.toJSON = RSAToJSON;
-RSAKey.parse = RSAParse;
-
+RSAKey.prototype.encryptUTF8 = function(text){RSAEncrypt(cryptico.utf82string(text))};
 // Version 1.1: support utf-8 decoding in pkcs1unpad2
 // Undo PKCS#1 (type 2, random) padding and, if valid, return the plaintext
 
@@ -169,7 +144,7 @@ function pkcs1unpad2(d, n)
     if (b.length - i != n - 1 || b[i] != 2) return null;
     ++i;
     while (b[i] != 0)
-    if (++i >= b.length) return null;
+        if (++i >= b.length) return null;
     var ret = "";
     while (++i < b.length)
     {
@@ -269,7 +244,7 @@ function RSADoPrivate(x)
     var xp = x.mod(this.p).modPow(this.dmp1, this.p);
     var xq = x.mod(this.q).modPow(this.dmq1, this.q);
     while (xp.compareTo(xq) < 0)
-    xp = xp.add(this.p);
+        xp = xp.add(this.p);
     return xp.subtract(xq).multiply(this.coeff).mod(this.p).multiply(this.q).add(xq);
 }
 
@@ -291,6 +266,7 @@ RSAKey.prototype.setPrivate = RSASetPrivate;
 RSAKey.prototype.setPrivateEx = RSASetPrivateEx;
 RSAKey.prototype.generate = RSAGenerate;
 RSAKey.prototype.decrypt = RSADecrypt;
+RSAKey.prototype.decryptUTF8 = function(ctext){return cryptico.string2utf8(RSADecrypt(ctext))}
 
 
 //
@@ -304,7 +280,7 @@ RSAKey.prototype.decrypt = RSADecrypt;
 // This software is licensed under the terms of the MIT License.
 // http://www.opensource.org/licenses/mit-license.php
 //
-// The above copyright and license notice shall be 
+// The above copyright and license notice shall be
 // included in all copies or substantial portions of the Software.
 //
 // Depends on:
@@ -455,30 +431,3 @@ RSAKey.prototype.signStringWithSHA256 = _rsasign_signStringWithSHA256;
 
 RSAKey.prototype.verifyString = _rsasign_verifyString;
 RSAKey.prototype.verifyHexSignatureForMessage = _rsasign_verifyHexSignatureForMessage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
